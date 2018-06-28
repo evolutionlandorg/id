@@ -3,27 +3,33 @@ pragma solidity ^0.4.23;
 import 'zeppelin-solidity/contracts/token/ERC20/ERC20.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
-contract Claim is Ownable{
-
-    using StringHelper for *;
+contract TakeBack is Ownable{
 
 
     // address of RING.sol on ethereum
-    address public ring;
+    address public tokenAdd;
+
+    // superuser of this contract
+    address public supervisor;
 
     mapping (address => uint) public userToNonce;
 
 
     // used for old&new users to claim their ring out
-    event TakeBack(address indexed _user, uint indexed _nonce);
-    // used for owner to claim all kind of token
+    event TakedBack(address indexed _user, uint indexed _nonce);
+    // used for supervisor to claim all kind of token
     event ClaimedTokens(address indexed _token, address indexed _controller, uint _amount);
+
+    modifier onlySupervisor() {
+        require (supervisor == msg.sender);
+        _;
+    }
 
 
     // _hashmessage = hash("${_user}${_nonce}${_value}")
-    // _v, _r, _s are from owner's signature on _hashmessage
+    // _v, _r, _s are from supervisor's signature on _hashmessage
     // claimRing(...) is invoked by the user who want to claim rings
-    // while the _hashmessage is signed by owner
+    // while the _hashmessage is signed by supervisor
     function takeBack(uint _nonce, uint _value, bytes32 _hashmessage, uint8 _v, bytes32 _r, bytes32 _s) public {
 
         address _user = msg.sender;
@@ -31,19 +37,19 @@ contract Claim is Ownable{
         // verify the _nonce is right
         require(userToNonce[_user] == _nonce);
 
-        // verify the _hashmessage is signed by owner
-        require(owner == verify(_hashmessage, _v, _r, _s));
+        // verify the _hashmessage is signed by supervisor
+        require(supervisor == verify(_hashmessage, _v, _r, _s));
 
         // verify that the _user, _nonce, _value are exactly what they should be
         require(keccak256(_user,_nonce,_value) == _hashmessage);
 
         // transfer ring from address(this) to _user
-        ERC20 ringtoken = ERC20(ring);
+        ERC20 ringtoken = ERC20(tokenAdd);
         ringtoken.transfer(_user, _value);
 
         // after the claiming operation succeeds
         userToNonce[_user]  += 1;
-        emit TakeBack(_user, _nonce);
+        emit TakedBack(_user, _nonce);
     }
 
 
@@ -54,7 +60,7 @@ contract Claim is Ownable{
         return signer;
     }
 
-    function claimTokens(address _token) onlyOwner {
+    function claimTokens(address _token) public onlyOwner {
         if (_token == 0x0) {
             owner.transfer(address(this).balance);
             return;
@@ -67,8 +73,12 @@ contract Claim is Ownable{
         emit ClaimedTokens(_token, owner, balance);
     }
 
+    // tentatively token is referred to RING address
+    function setToken(address _token) onlySupervisor public {
+        tokenAdd = _token;
+    }
 
-    function setRING(address _token) onlyOwner public {
-        ring = _token;
+    function changeSupervisor(address _supervisor) onlyOwner public {
+        supervisor = _supervisor;
     }
 }
