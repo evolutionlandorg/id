@@ -20,3 +20,6 @@ $ npm install solc@0.4.23
 ```
 
 after the operations above, problem solved.
+
+#### NOTE
+openZeppelin related dependency's name is :"openzeppelin-solidity", not "zeppelin-solidity"
