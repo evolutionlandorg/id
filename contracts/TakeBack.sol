@@ -5,11 +5,9 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 contract TakeBack is Ownable{
 
-
     // address of RING.sol on ethereum
     address public tokenAdd;
 
-    // superuser of this contract
     address public supervisor;
 
     mapping (address => uint) public userToNonce;
@@ -20,11 +18,11 @@ contract TakeBack is Ownable{
     // used for supervisor to claim all kind of token
     event ClaimedTokens(address indexed _token, address indexed _controller, uint _amount);
 
-    modifier onlySupervisor() {
-        require (supervisor == msg.sender);
-        _;
-    }
 
+    constructor(address _token, address _supervisor) public {
+        tokenAdd = _token;
+        supervisor = _supervisor;
+    }
 
     // _hashmessage = hash("${_user}${_nonce}${_value}")
     // _v, _r, _s are from supervisor's signature on _hashmessage
@@ -41,21 +39,20 @@ contract TakeBack is Ownable{
         require(supervisor == verify(_hashmessage, _v, _r, _s));
 
         // verify that the _user, _nonce, _value are exactly what they should be
-        require(keccak256(_user,_nonce,_value) == _hashmessage);
+        require(keccak256(abi.encodePacked(_user,_nonce,_value)) == _hashmessage);
 
-        // transfer ring from address(this) to _user
-        ERC20 ringtoken = ERC20(tokenAdd);
-        ringtoken.transfer(_user, _value);
+        // transfer token from address(this) to _user
+        ERC20 token = ERC20(tokenAdd);
+        token.transfer(_user, _value);
 
         // after the claiming operation succeeds
         userToNonce[_user]  += 1;
         emit TakedBack(_user, _nonce);
     }
 
-
     function verify(bytes32 _hashmessage, uint8 _v, bytes32 _r, bytes32 _s) internal pure returns (address) {
         bytes memory prefix = "\x19EvolutionLand Signed Message:\n32";
-        bytes32 prefixedHash = keccak256(prefix, _hashmessage);
+        bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, _hashmessage));
         address signer = ecrecover(prefixedHash, _v, _r, _s);
         return signer;
     }
@@ -73,12 +70,7 @@ contract TakeBack is Ownable{
         emit ClaimedTokens(_token, owner, balance);
     }
 
-    // tentatively token is referred to RING address
-    function setToken(address _token) onlySupervisor public {
-        tokenAdd = _token;
-    }
-
-    function changeSupervisor(address _supervisor) onlyOwner public {
-        supervisor = _supervisor;
+    function changeSupervisor(address _newSupervisor) public onlyOwner {
+        supervisor = _newSupervisor;
     }
 }
