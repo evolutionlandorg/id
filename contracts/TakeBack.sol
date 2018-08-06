@@ -10,6 +10,8 @@ contract TakeBack is Ownable{
 
     address public supervisor;
 
+    uint256 public networkId;
+
     mapping (address => uint) public userToNonce;
 
 
@@ -19,9 +21,10 @@ contract TakeBack is Ownable{
     event ClaimedTokens(address indexed _token, address indexed _controller, uint _amount);
 
 
-    constructor(address _token, address _supervisor) public {
+    constructor(address _token, address _supervisor, uint256 _networkId) public {
         tokenAdd = _token;
         supervisor = _supervisor;
+        networkId = _networkId;
     }
 
     // _hashmessage = hash("${_user}${_nonce}${_value}")
@@ -29,7 +32,6 @@ contract TakeBack is Ownable{
     // claimRing(...) is invoked by the user who want to claim rings
     // while the _hashmessage is signed by supervisor
     function takeBack(uint _nonce, uint _value, bytes32 _hashmessage, uint8 _v, bytes32 _r, bytes32 _s) public {
-
         address _user = msg.sender;
 
         // verify the _nonce is right
@@ -39,7 +41,7 @@ contract TakeBack is Ownable{
         require(supervisor == verify(_hashmessage, _v, _r, _s));
 
         // verify that the _user, _nonce, _value are exactly what they should be
-        require(keccak256(abi.encodePacked(_user,_nonce,_value)) == _hashmessage);
+        require(keccak256(abi.encodePacked(_user,_nonce,_value,networkId)) == _hashmessage);
 
         // transfer token from address(this) to _user
         ERC20 token = ERC20(tokenAdd);
