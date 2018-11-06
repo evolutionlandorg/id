@@ -7,17 +7,19 @@ import "@evolutionland/common/contracts/SettingIds.sol";
 import "@evolutionland/common/contracts/DSAuth.sol";
 
 contract ChannelDevidend is DSAuth, SettingIds {
-    event TrasnferredDividend(address indexed _dest, uint256 _value);
+    event TrasnferredFrozenDividend(address indexed _dest, uint256 _value);
+    event TrasnferredChannelDividend(address indexed _dest, uint256 _value);
 
     event ClaimedTokens(address indexed _token, address indexed _controller, uint _amount);
 
     ISettingsRegistry public registry;
 
-    address public dvidendTakeBack;
+    address public channelDividend;
+    address public frozenDividend;
 
-    constructor(address _registry, address _dvidendTakeBack) public {
+    constructor(address _registry, address _dividendTakeBack) public {
         registry = ISettingsRegistry(_registry);
-        dvidendTakeBack = _dvidendTakeBack;
+        dividendTakeBack = _dividendTakeBack;
     }
 
     function tokenFallback(address _from, uint256 _value, bytes _data) public {
@@ -31,12 +33,23 @@ contract ChannelDevidend is DSAuth, SettingIds {
 
     function settlement() public {
         address ring = registry.addressOf(SettingIds.CONTRACT_RING_ERC20_TOKEN);
+        address kton = registry.addressOf(SettingIds.CONTRACT_KTON_ERC20_TOKEN);
 
         uint256 balance = ERC20(ring).balanceOf(address(this));
         if ( balance > 0 ) {
-            ERC20(ring).transfer(dvidendTakeBack, balance);
+            uint256 ktonSupply = ERC20(kton).totalSupply();
 
-            emit TrasnferredDividend(dvidendTakeBack, balance);
+            uint256 frozenKton = ERC20(ring).balanceOf(frozenDividend);
+
+            uint256 frozenBalance = frozenKton.mul(balance).div(ktonSupply);
+
+            ERC20(ring).transfer(frozenDividend, frozenBalance);
+
+            emit TrasnferredFrozenDividend(frozenDividend, balance);
+
+            ERC20(ring).transfer(channelDividend, balance.sub(frozenBalance));
+            
+            emit TrasnferredChannelDividend(channelDividend, balance);
         }
     }
     
@@ -52,5 +65,4 @@ contract ChannelDevidend is DSAuth, SettingIds {
 
         emit ClaimedTokens(_token, owner, balance);
     }
-
 }
