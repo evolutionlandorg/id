@@ -3,7 +3,7 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
-contract TakeBack is Ownable{
+contract ChannelDevidend is Ownable {
 
     // address of RING.sol on ethereum
     address public tokenAdd;
@@ -19,14 +19,11 @@ contract TakeBack is Ownable{
     // used for supervisor to claim all kind of token
     event ClaimedTokens(address indexed _token, address indexed _controller, uint _amount);
 
-
     constructor(address _token, address _supervisor, uint256 _networkId) public {
         tokenAdd = _token;
         supervisor = _supervisor;
         networkId = _networkId;
     }
-
-    
 
     // _hashmessage = hash("${_user}${_nonce}${_value}")
     // _v, _r, _s are from supervisor's signature on _hashmessage
@@ -50,11 +47,12 @@ contract TakeBack is Ownable{
 
         // after the claiming operation succeeds
         userToNonce[_user]  += 1;
+
         emit TakedBack(_user, _nonce, _value);
     }
 
     function verify(bytes32 _hashmessage, uint8 _v, bytes32 _r, bytes32 _s) internal pure returns (address) {
-        bytes memory prefix = "\x19EvolutionLand Signed Message:\n32";
+        bytes memory prefix = "\x19EvolutionLand Signed Message For Channel Devidend:\n32";
         bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, _hashmessage));
         address signer = ecrecover(prefixedHash, _v, _r, _s);
         return signer;
