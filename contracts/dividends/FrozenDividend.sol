@@ -91,7 +91,7 @@ contract FrozenDividend is Ownable, SettingIds{
     }
 
     function _depositKTON(uint256 _ktonValue) internal {
-        ktonBalances[msg.sender] = ktonBalances[msg.sender].add(ktonBalances[msg.sender]);
+        ktonBalances[msg.sender] = ktonBalances[msg.sender].add(_ktonValue);
         ktonSupply = ktonSupply.add(_ktonValue);
 
         int256 _updatedPayouts = (int256) (ringProfitPerKTON * _ktonValue);
