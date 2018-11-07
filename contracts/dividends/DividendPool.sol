@@ -9,7 +9,9 @@ import "@evolutionland/common/contracts/interfaces/ISettingsRegistry.sol";
 import "@evolutionland/common/contracts/DSAuth.sol";
 import "../IDSettingIds.sol";
 
+
 contract DividendPool is DSAuth, IDSettingIds {
+
     using SafeMath for *;
 
     event TransferredFrozenDividend(address indexed _dest, uint256 _value);
