@@ -56,15 +56,23 @@ contract FrozenDividend is Ownable, SettingIds{
 
         if (msg.sender == ring) {
             // trigger settlement
-            incomeRING(_value);
+            _incomeRING(_value);
         }
 
         if (msg.sender == kton) {
-            depositKTON(_value);
+            _depositKTON(_value);
         }
     }
 
-    function incomeRING(uint256 _ringValue) internal {
+    function incomeRING(uint256 _ringValue) public {
+        address ring = registry.addressOf(SettingIds.CONTRACT_RING_ERC20_TOKEN);
+
+        ERC20(ring).transferFrom(msg.sender, address(this), _ringValue);
+
+        _incomeRING(_ringValue);
+    }
+
+    function _incomeRING(uint256 _ringValue) internal {
         if (ktonSupply > 0) {
             ringProfitPerKTON = ringProfitPerKTON.add(
                 _ringValue.mul(magnitude).div(ktonSupply)
@@ -74,7 +82,15 @@ contract FrozenDividend is Ownable, SettingIds{
         emit Income(msg.sender, _ringValue);
     }
 
-    function depositKTON(uint256 _ktonValue) internal {
+    function depositKTON(uint256 _ktonValue) public {
+        address kton = registry.addressOf(SettingIds.CONTRACT_KTON_ERC20_TOKEN);
+
+        ERC20(kton).transferFrom(msg.sender, address(this), _ktonValue);
+
+        _depositKTON(_ktonValue);
+    }
+
+    function _depositKTON(uint256 _ktonValue) internal {
         ktonBalances[msg.sender] = ktonBalances[msg.sender].add(ktonBalances[msg.sender]);
         ktonSupply = ktonSupply.add(_ktonValue);
 
@@ -84,7 +100,7 @@ contract FrozenDividend is Ownable, SettingIds{
         emit DepositKTON(msg.sender, _ktonValue);
     }
 
-    function withdrawKTON(uint256 _ktonValue) internal {
+    function withdrawKTON(uint256 _ktonValue) public {
         require(_ktonValue <= ktonBalances[msg.sender], "Withdraw KTON amount should not larger than balance.");
 
         ktonBalances[msg.sender] = ktonBalances[msg.sender].sub(_ktonValue);
@@ -97,7 +113,7 @@ contract FrozenDividend is Ownable, SettingIds{
         emit WithdrawKTON(msg.sender, _ktonValue);
     }
 
-    function withdrawDividends()public
+    function withdrawDividends() public
     {
         // setup data
         address _customerAddress = msg.sender;

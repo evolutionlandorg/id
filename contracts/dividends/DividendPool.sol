@@ -4,11 +4,12 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "@evolutionland/common/contracts/interfaces/ERC223.sol";
+import "@evolutionland/common/contracts/interfaces/IBurnableERC20.sol";
 import "@evolutionland/common/contracts/interfaces/ISettingsRegistry.sol";
-import "@evolutionland/common/contracts/SettingIds.sol";
 import "@evolutionland/common/contracts/DSAuth.sol";
+import "../IDSettingIds.sol";
 
-contract DevidendPool is DSAuth, SettingIds {
+contract DividendPool is DSAuth, IDSettingIds {
     using SafeMath for *;
 
     event TransferredFrozenDividend(address indexed _dest, uint256 _value);
@@ -16,50 +17,67 @@ contract DevidendPool is DSAuth, SettingIds {
 
     event ClaimedTokens(address indexed _token, address indexed _controller, uint _amount);
 
+    bool private singletonLock = false;
+
     ISettingsRegistry public registry;
 
-    address public channelDividend;
-    address public frozenDividend;
+    /*
+     * Modifiers
+     */
+    modifier singletonLockCall() {
+        require(!singletonLock, "Only can call once");
+        _;
+        singletonLock = true;
+    }
 
-    constructor(address _registry, address _channelDividend, address _frozenDividend) public {
-        registry = ISettingsRegistry(_registry);
-        channelDividend = _channelDividend;
-        frozenDividend = _frozenDividend;
+    constructor() public {
+        // initializeContract
+    }
+
+    function initializeContract(ISettingsRegistry _registry) public singletonLockCall {
+        owner = msg.sender;
+
+        emit LogSetOwner(msg.sender);
+
+        registry = _registry;
     }
 
     function tokenFallback(address _from, uint256 _value, bytes _data) public {
-        address ring = registry.addressOf(SettingIds.CONTRACT_RING_ERC20_TOKEN);
-        address kton = registry.addressOf(SettingIds.CONTRACT_KTON_ERC20_TOKEN);
-
+        address ring = registry.addressOf(CONTRACT_RING_ERC20_TOKEN);
         if (msg.sender == ring) {
             // trigger settlement
             settlement();
         }
 
+        address kton = registry.addressOf(CONTRACT_KTON_ERC20_TOKEN);
         if (msg.sender == kton) {
-            // TODO: burn these kton.
+            // TODO: add Dividend Pool to authority.
+            IBurnableERC20(kton).burn(address(this), _value);
         }
     }
 
     function settlement() public {
-        address ring = registry.addressOf(SettingIds.CONTRACT_RING_ERC20_TOKEN);
-        address kton = registry.addressOf(SettingIds.CONTRACT_KTON_ERC20_TOKEN);
+        address ring = registry.addressOf(CONTRACT_RING_ERC20_TOKEN);
 
         uint256 balance = ERC20(ring).balanceOf(address(this));
         if ( balance > 0 ) {
+            address kton = registry.addressOf(CONTRACT_KTON_ERC20_TOKEN);
+            address frozenDividend = registry.addressOf(CONTRACT_FROZEN_DIVIDEND);
+            address channelDividend = registry.addressOf(CONTRACT_CHANNEL_DIVIDEND);
+
             uint256 ktonSupply = ERC20(kton).totalSupply();
 
-            uint256 frozenKton = ERC20(ring).balanceOf(frozenDividend);
+            uint256 frozenKton = ERC20(kton).balanceOf(frozenDividend);
 
             uint256 frozenBalance = frozenKton.mul(balance).div(ktonSupply);
 
             ERC223(ring).transfer(frozenDividend, frozenBalance, "0x0");
 
-            emit TrasnferredFrozenDividend(frozenDividend, balance);
+            emit TransferredFrozenDividend(frozenDividend, balance);
 
             ERC20(ring).transfer(channelDividend, balance.sub(frozenBalance));
             
-            emit TrasnferredChannelDividend(channelDividend, balance.sub(frozenBalance));
+            emit TransferredChannelDividend(channelDividend, balance.sub(frozenBalance));
         }
     }
     
