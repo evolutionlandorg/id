@@ -2,11 +2,15 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "@evolutionland/common/contracts/interfaces/ERC223.sol";
 import "@evolutionland/common/contracts/interfaces/ISettingsRegistry.sol";
 import "@evolutionland/common/contracts/SettingIds.sol";
 import "@evolutionland/common/contracts/DSAuth.sol";
 
 contract ChannelDevidend is DSAuth, SettingIds {
+    using SafeMath for *;
+
     event TrasnferredFrozenDividend(address indexed _dest, uint256 _value);
     event TrasnferredChannelDividend(address indexed _dest, uint256 _value);
 
@@ -17,9 +21,10 @@ contract ChannelDevidend is DSAuth, SettingIds {
     address public channelDividend;
     address public frozenDividend;
 
-    constructor(address _registry, address _dividendTakeBack) public {
+    constructor(address _registry, address _channelDividend, address _frozenDividend) public {
         registry = ISettingsRegistry(_registry);
-        dividendTakeBack = _dividendTakeBack;
+        channelDividend = _channelDividend;
+        frozenDividend = _frozenDividend;
     }
 
     function tokenFallback(address _from, uint256 _value, bytes _data) public {
@@ -48,7 +53,7 @@ contract ChannelDevidend is DSAuth, SettingIds {
 
             uint256 frozenBalance = frozenKton.mul(balance).div(ktonSupply);
 
-            ERC20(ring).transfer(frozenDividend, frozenBalance);
+            ERC223(ring).transfer(frozenDividend, frozenBalance, "0x0");
 
             emit TrasnferredFrozenDividend(frozenDividend, balance);
 

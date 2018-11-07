@@ -3,7 +3,7 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
-contract DevidendTakeBack is Ownable {
+contract ChannelDevidend is Ownable {
 
     // address of RING.sol on ethereum
     address public tokenAdd;
