@@ -8,11 +8,11 @@ import "@evolutionland/common/contracts/interfaces/ISettingsRegistry.sol";
 import "@evolutionland/common/contracts/SettingIds.sol";
 import "@evolutionland/common/contracts/DSAuth.sol";
 
-contract ChannelDevidend is DSAuth, SettingIds {
+contract DevidendPool is DSAuth, SettingIds {
     using SafeMath for *;
 
-    event TrasnferredFrozenDividend(address indexed _dest, uint256 _value);
-    event TrasnferredChannelDividend(address indexed _dest, uint256 _value);
+    event TransferredFrozenDividend(address indexed _dest, uint256 _value);
+    event TransferredChannelDividend(address indexed _dest, uint256 _value);
 
     event ClaimedTokens(address indexed _token, address indexed _controller, uint _amount);
 
