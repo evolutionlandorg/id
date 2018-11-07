@@ -24,10 +24,15 @@ contract ChannelDevidend is DSAuth, SettingIds {
 
     function tokenFallback(address _from, uint256 _value, bytes _data) public {
         address ring = registry.addressOf(SettingIds.CONTRACT_RING_ERC20_TOKEN);
+        address kton = registry.addressOf(SettingIds.CONTRACT_KTON_ERC20_TOKEN);
 
-        if(msg.sender == ring) {
+        if (msg.sender == ring) {
             // trigger settlement
             settlement();
+        }
+
+        if (msg.sender == kton) {
+            // TODO: burn these kton.
         }
     }
 
@@ -49,7 +54,7 @@ contract ChannelDevidend is DSAuth, SettingIds {
 
             ERC20(ring).transfer(channelDividend, balance.sub(frozenBalance));
             
-            emit TrasnferredChannelDividend(channelDividend, balance);
+            emit TrasnferredChannelDividend(channelDividend, balance.sub(frozenBalance));
         }
     }
     
