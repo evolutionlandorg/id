@@ -1,3 +1,7 @@
-.idea/
-node_modules/
-build/
+.idea
+node_modules
+build
+contracts-flattener
+truffle.js
+truffle-config.js
+package-lock.json
