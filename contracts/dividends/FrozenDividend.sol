@@ -60,7 +60,7 @@ contract FrozenDividend is Ownable, SettingIds{
         }
 
         if (msg.sender == kton) {
-            _depositKTON(_value);
+            _depositKTON(_from, _value);
         }
     }
 
@@ -87,17 +87,17 @@ contract FrozenDividend is Ownable, SettingIds{
 
         ERC20(kton).transferFrom(msg.sender, address(this), _ktonValue);
 
-        _depositKTON(_ktonValue);
+        _depositKTON(msg.sender, _ktonValue);
     }
 
-    function _depositKTON(uint256 _ktonValue) internal {
-        ktonBalances[msg.sender] = ktonBalances[msg.sender].add(_ktonValue);
+    function _depositKTON(address _from, uint256 _ktonValue) internal {
+        ktonBalances[_from] = ktonBalances[_from].add(_ktonValue);
         ktonSupply = ktonSupply.add(_ktonValue);
 
         int256 _updatedPayouts = (int256) (ringProfitPerKTON * _ktonValue);
-        ringPayoutsTo[msg.sender] += _updatedPayouts;
+        ringPayoutsTo[_from] += _updatedPayouts;
 
-        emit DepositKTON(msg.sender, _ktonValue);
+        emit DepositKTON(_from, _ktonValue);
     }
 
     function withdrawKTON(uint256 _ktonValue) public {
