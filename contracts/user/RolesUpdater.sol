@@ -11,12 +11,18 @@ contract RolesUpdater is Ownable {
 
     uint256 public networkId;
 
-    mapping (address => uint256) public userToNonce;
+    mapping(address => uint256) public userToNonce;
 
     event UpdateTesterRole(address indexed _user, uint indexed _nonce, bytes32 _testerCodeHash);
 
     event ClaimedTokens(address indexed _token, address indexed _controller, uint _amount);
-    
+
+    constructor(IUserRoles _userRoles, uint _networkId, address _supervisor) public {
+        userRoles = _userRoles;
+        networkId = _networkId;
+        supervisor = _supervisor;
+    }
+
     // _hashmessage = hash("${_address}${_nonce}${sha3(_testercode)}${_networkId}")
     // _v, _r, _s are from supervisor's signature on _hashmessage
     function updateTesterRole(uint256 _nonce, bytes32 _testerCodeHash, bytes32 _hashmessage, uint8 _v, bytes32 _r, bytes32 _s) public {
@@ -34,7 +40,7 @@ contract RolesUpdater is Ownable {
         userRoles.addAddressToTester(_user);
 
         // after the claiming operation succeeds
-        userToNonce[_user]  += 1;
+        userToNonce[_user] += 1;
 
         emit UpdateTesterRole(_user, _nonce, _testerCodeHash);
     }
