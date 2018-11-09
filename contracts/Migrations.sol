@@ -1,8 +1,4 @@
 pragma solidity ^0.4.23;
-import "@evolutionland/common/contracts/SettingsRegistry.sol";
-import "@evolutionland/common/contracts/MintAndBurnAuthority.sol";
-import "@evolutionland/common/contracts/StandardERC223.sol";
-import "@evolutionland/upgraeability-using-unstructured-storage/contracts/OwnedUpgradeabilityProxy.sol";
 
 contract Migrations {
   address public owner;
