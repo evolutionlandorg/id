@@ -53,6 +53,44 @@ contract('Gringotts Bank Test', async(accounts) => {
         console.log(dividends1.toNumber());
 
         console.log(dividends2.toNumber());
+
+        let balance1 = await ring.balanceOf(investor);
+
+        console.log(balance1.toNumber());
+
+        await frozenDividend.withdrawDividends({from: investor});
+
+        await frozenDividend.withdrawDividends({from: investor2});
+
+        let dividends3 = await frozenDividend.dividendsOf(investor);
+
+        let dividends4 = await frozenDividend.dividendsOf(investor2);
+
+        console.log(dividends3.toNumber());
+
+        console.log(dividends4.toNumber());
+
+        let balance2 = await ring.balanceOf(investor);
+
+        console.log(balance2.toNumber());
+
+        await ring.contract.transfer['address,uint256,bytes']( frozenDividend.address, 5000 * COIN, '0x' + abi.rawEncode(['uint256'], [12]).toString('hex'), { from: system_income, gas: 300000 });
+
+        let dividends5 = await frozenDividend.dividendsOf(investor);
+        console.log(dividends5.toNumber());
+
+        await frozenDividend.withdrawKTON(1 * COIN, {from: investor});
+
+        let dividends6 = await frozenDividend.dividendsOf(investor);
+        console.log(dividends6.toNumber());
+
+        await ring.contract.transfer['address,uint256,bytes']( frozenDividend.address, 5000 * COIN, '0x' + abi.rawEncode(['uint256'], [12]).toString('hex'), { from: system_income, gas: 300000 });
+
+        let dividends7 = await frozenDividend.dividendsOf(investor);
+        console.log(dividends7.toNumber());
+
+        let dividends8 = await frozenDividend.dividendsOf(investor2);
+        console.log(dividends8.toNumber());
     })
 
     it('should get right amount of dividends', async() => {
