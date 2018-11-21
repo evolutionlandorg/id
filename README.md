@@ -45,6 +45,6 @@ UserRoles: 0x96f2d19bac6c5e62042ba2b5227203eeb615539a
 RolesUpdater: 0x7550f7dceaa0b4ccda34ae84a303ab274523e65a
 UserRolesAuthority: 0x0ca587a904bbc7fa511c7ffbc310ffef27460d65
 
-RedBag: 0xc8f3da7f80423f7f2df7f8479f4300119af9517d
+RedBag: 0x35859d928af9d54dd5efb7543d9cf2b6e0fabafc
 
 ```

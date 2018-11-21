@@ -18,8 +18,6 @@ contract RedBag is Pausable, IDSettingIds {
     uint256 public ringAmountLimit;
     uint256 public bagCountLimit;
 
-    uint256 public count;
-
     constructor(ISettingsRegistry _registry, uint256 _ringAmountLimit, uint256 _bagCountLimit) public
     {
         require(_ringAmountLimit > 0, "RING amount need to be no-zero");
@@ -34,27 +32,27 @@ contract RedBag is Pausable, IDSettingIds {
         if (msg.sender == registry.addressOf(CONTRACT_RING_ERC20_TOKEN)) {
             uint256 _bagCount;
             uint256 _model;
+            uint256 _id;
             assembly {
                 let ptr := mload(0x40)
                 calldatacopy(ptr, 0, calldatasize)
                 _bagCount := mload(add(ptr, 132))
                 _model := mload(add(ptr, 164))
+                _id := mload(add(ptr, 196))
             }
 
-            _giveRedBag(_from, _value, _bagCount, _model);
+            _giveRedBag(_from, _value, _bagCount, _id, _model);
         }
     }
 
-    function _giveRedBag(address _sender, uint256 _ringAmount, uint256 _bagCount, uint256 _model) internal whenNotPaused {
+    function _giveRedBag(address _sender, uint256 _ringAmount, uint256 _bagCount, uint256 _id, uint256 _model) internal whenNotPaused {
         require(_sender != address(0));
         require(_ringAmount <= ringAmountLimit && _ringAmount > 0);
         require(_bagCount <= bagCountLimit && _bagCount > 0);
 
         ERC20(registry.addressOf(CONTRACT_RING_ERC20_TOKEN)).transfer(registry.addressOf(CONTRACT_CHANNEL_DIVIDEND), _ringAmount);
 
-        count += 1;
-
-        emit RegBagCreated(count, _sender, _bagCount, _ringAmount, _model);
+        emit RegBagCreated(_id, _sender, _bagCount, _ringAmount, _model);
     }
 
     function changeRegistry(ISettingsRegistry _newRegistry) public onlyOwner {
