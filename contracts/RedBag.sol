@@ -18,14 +18,18 @@ contract RedBag is Pausable, IDSettingIds {
     uint256 public ringAmountLimit;
     uint256 public bagCountLimit;
 
-    constructor(ISettingsRegistry _registry, uint256 _ringAmountLimit, uint256 _bagCountLimit) public
+    uint256 public perMinAmount;
+
+    constructor(ISettingsRegistry _registry, uint256 _ringAmountLimit, uint256 _bagCountLimit, uint256 _perMinAmount) public
     {
         require(_ringAmountLimit > 0, "RING amount need to be no-zero");
         require(_bagCountLimit > 0, "RING bag amount need to be no-zero");
+        require(_perMinAmount > 0, "RING that everyone can get need to be no-zero");
 
         registry = _registry;
         ringAmountLimit = _ringAmountLimit;
         bagCountLimit = _bagCountLimit;
+        perMinAmount  = _perMinAmount;
     }
 
     function tokenFallback(address _from, uint256 _value, bytes _data) public whenNotPaused {
@@ -50,7 +54,9 @@ contract RedBag is Pausable, IDSettingIds {
         require(_ringAmount <= ringAmountLimit && _ringAmount > 0);
         require(_bagCount <= bagCountLimit && _bagCount > 0);
 
-        require(_ringAmount >= _bagCount);
+        // no overflow risk
+        // don't worry
+        require(_ringAmount >= (perMinAmount * _bagCount));
 
         ERC20(registry.addressOf(CONTRACT_RING_ERC20_TOKEN)).transfer(registry.addressOf(CONTRACT_CHANNEL_DIVIDEND), _ringAmount);
 
@@ -61,9 +67,10 @@ contract RedBag is Pausable, IDSettingIds {
         registry = _newRegistry;
     }
 
-    function changeLimit(uint256 _ringAmountLimit, uint256 _bagCountLimit) public onlyOwner {
+    function changeLimit(uint256 _ringAmountLimit, uint256 _bagCountLimit, uint256 _perMinAmount) public onlyOwner {
         ringAmountLimit = _ringAmountLimit;
         bagCountLimit = _bagCountLimit;
+        perMinAmount = _perMinAmount;
     }
 
 
