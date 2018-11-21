@@ -50,6 +50,8 @@ contract RedBag is Pausable, IDSettingIds {
         require(_ringAmount <= ringAmountLimit && _ringAmount > 0);
         require(_bagCount <= bagCountLimit && _bagCount > 0);
 
+        require(_ringAmount >= _bagCount);
+
         ERC20(registry.addressOf(CONTRACT_RING_ERC20_TOKEN)).transfer(registry.addressOf(CONTRACT_CHANNEL_DIVIDEND), _ringAmount);
 
         emit RegBagCreated(_id, _sender, _bagCount, _ringAmount, _model);
