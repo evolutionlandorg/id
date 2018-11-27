@@ -29,7 +29,7 @@ contract RedBag is Pausable, IDSettingIds {
         registry = _registry;
         ringAmountLimit = _ringAmountLimit;
         bagCountLimit = _bagCountLimit;
-        perMinAmount  = _perMinAmount;
+        perMinAmount = _perMinAmount;
     }
 
     function tokenFallback(address _from, uint256 _value, bytes _data) public whenNotPaused {
@@ -82,16 +82,16 @@ contract RedBag is Pausable, IDSettingIds {
     ///  sent tokens to this contract.
     /// @param _token The address of the token contract that you want to recover
     ///  set to 0 in case you want to extract ether.
-    function claimTokens(address _token) onlyOwner public {
-      if (_token == 0x0) {
-          owner.transfer(address(this).balance);
-          return;
-      }
+    function claimTokens(address _token) public onlyOwner {
+        if (_token == 0x0) {
+            owner.transfer(address(this).balance);
+            return;
+        }
 
-      ERC20 token = ERC20(_token);
-      uint balance = token.balanceOf(this);
-      token.transfer(owner, balance);
+        ERC20 token = ERC20(_token);
+        uint balance = token.balanceOf(this);
+        token.transfer(owner, balance);
 
-      emit ClaimedTokens(_token, owner, balance);
+        emit ClaimedTokens(_token, owner, balance);
     }
 }
