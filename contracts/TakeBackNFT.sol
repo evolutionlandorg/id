@@ -21,7 +21,7 @@ contract TakeBackNFT is SettingIds, DSAuth {
     mapping (address => uint256) public userToNonce;
 
     // used for old&new users to claim their ring out
-    event TakedBackNFT(address indexed _user, uint indexed _nonce, uint256 _value);
+    event TakenBackNFT(address indexed _user, uint indexed _nonce, uint256 _value);
     // used for supervisor to claim all kind of token
     event ClaimedTokens(address indexed _token, address indexed _controller, uint _amount);
 
@@ -50,7 +50,7 @@ contract TakeBackNFT is SettingIds, DSAuth {
     // _v, _r, _s are from supervisor's signature on _hashmessage
     // claimRing(...) is invoked by the user who want to claim rings
     // while the _hashmessage is signed by supervisor
-    function takeBackNFT(uint256 _nonce, uint256 _tokenId, uint256 _expireTime, bytes32 _hashmessage, uint8 _v, bytes32 _r, bytes32 _s) public {
+    function takeBackNFT(uint256 _nonce, uint256 _tokenId, address _nftAddress, uint256 _expireTime, bytes32 _hashmessage, uint8 _v, bytes32 _r, bytes32 _s) public {
         address _user = msg.sender;
 
         // verify the _nonce is right
@@ -60,18 +60,17 @@ contract TakeBackNFT is SettingIds, DSAuth {
         require(supervisor == verify(_hashmessage, _v, _r, _s));
 
         // verify that the _user, _nonce, _value are exactly what they should be
-        require(keccak256(abi.encodePacked(_user,_nonce,_tokenId,_expireTime,networkId)) == _hashmessage);
+        require(keccak256(abi.encodePacked(_user,_nonce,_nftAddress,_tokenId,_expireTime,networkId)) == _hashmessage);
 
         require(now <= _expireTime, 'you are expired.');
 
         // transfer token from address(this) to _user
-        ERC721 nft = ERC721(registry.addressOf(SettingIds.CONTRACT_OBJECT_OWNERSHIP));
-        Gen0ApostleInterface gen0Apostle = Gen0ApostleInterface(nft.ownerOf(_tokenId));
-        gen0Apostle.transferToTakeBack(_tokenId, _user);
+        address owner = ERC721(_nftAddress).ownerOf(_tokenId);
+        ERC721(_nftAddress).transferFrom(owner, _user, _tokenId);
 
         // after the claiming operation succeeds
         userToNonce[_user]  += 1;
-        emit TakedBackNFT(_user, _nonce, _tokenId);
+        emit TakenBackNFT(_user, _nonce, _tokenId);
     }
 
     function verify(bytes32 _hashmessage, uint8 _v, bytes32 _r, bytes32 _s) internal pure returns (address) {
