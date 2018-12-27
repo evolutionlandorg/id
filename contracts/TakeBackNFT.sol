@@ -1,19 +1,11 @@
 pragma solidity ^0.4.24;
 
 import "@evolutionland/common/contracts/DSAuth.sol";
-import "@evolutionland/common/contracts/SettingIds.sol";
-import "@evolutionland/common/contracts/interfaces/ISettingsRegistry.sol";
 import "openzeppelin-solidity/contracts/token/ERC721/ERC721.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "./interfaces/Gen0ApostleInterface.sol";
 
 
-contract TakeBackNFT is SettingIds, DSAuth {
-
-    bool private singletonLock = false;
-
-    ISettingsRegistry public registry;
-
+contract TakeBackNFT is DSAuth {
     address public supervisor;
 
     uint256 public networkId;
@@ -25,24 +17,8 @@ contract TakeBackNFT is SettingIds, DSAuth {
     // used for supervisor to claim all kind of token
     event ClaimedTokens(address indexed _token, address indexed _controller, uint _amount);
 
-
-    /*
-      *  Modifiers
-      */
-    modifier singletonLockCall() {
-        require(!singletonLock, "Only can call once");
-        _;
-        singletonLock = true;
-    }
-
-//    constructor(address _supervisor, uint256 _networkId) public {
-//        tokenAdd = _token;
-//        supervisor = _supervisor;
-//        networkId = _networkId;
-//    }
-
-    function initializeContract(ISettingsRegistry _registry, uint256 _networkId) public singletonLockCall {
-        registry = _registry;
+    constructor(address _supervisor, uint256 _networkId) public {
+        supervisor = _supervisor;
         networkId = _networkId;
     }
 
