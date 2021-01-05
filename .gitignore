@@ -5,3 +5,5 @@ contracts-flattener
 truffle.js
 truffle-config.js
 package-lock.json
+waffle.json
+cache
